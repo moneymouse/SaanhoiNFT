@@ -1,0 +1,22 @@
+{
+  "name": "saanhoinft",
+  "version": "0.0.1",
+  "description": "NFT contract of saanhoi",
+  "main": "\"\"",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test --network development"
+  },
+  "keywords": [
+    "solidity",
+    "nft",
+    "truffle"
+  ],
+  "author": "MoneyMouse",
+  "license": "MIT",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.5.0"
+  }
+}
