@@ -13,12 +13,16 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable{
     enum STATUS {PENDING,WHITELIST,PUBLIC_SALE}
     STATUS public STAGE;
 
-    mapping (address =>bool ) private WHITELIST;/** default:false */
+    mapping (address => uint ) private WHITELIST;/** default:false */
 
     uint256 immutable public PRICE;
     uint256 immutable private _maxTotalSupply;
 
     string private _uri;
+
+    uint immutable private _WHITELIST_MAX_MINT_TIMES;
+    uint immutable private _MINT_BATCH;
+
 
     Counters.Counter private _tokenIdCounter;
 
@@ -33,6 +37,9 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable{
         _maxTotalSupply = 10000;
         _uri = baseURI_;
         STAGE = STATUS.PENDING;
+
+        _WHITELIST_MAX_MINT_TIMES = 2;
+        _MINT_BATCH = 5;
     }
 
     function maxTotalSupply() public view returns(uint256){
@@ -41,6 +48,7 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable{
 
     // TODO: test payable, onlyStage
     function mint(uint256 num) public onlyStage(STATUS.PUBLIC_SALE) nonReentrant payable{
+        require(num <= _MINT_BATCH,"Saanhoi");
         require(msg.value == num*PRICE, "Saanhoi: Lack of ETH");
         safeMultiplyMint(msg.sender,num);
     }
@@ -48,13 +56,15 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable{
     // TODO: whiteListMint(nonReentrant)
     function whiteListMint(uint256 num) public onlyStage(STATUS.WHITELIST) nonReentrant payable{
         require(msg.value == num*PRICE, "Saanhoi: Lack of ETH");
-        require(isWhiteListMember(msg.sender), "Saanhoi: Lack of permission");
-        safeMultiplyMint(msg.sender,num);
+        require(isWhiteListMember(msg.sender), "Saanhoi: Illegal members");
+        require(restWhiteListTimesOf(msg.sender) >= num, "Saanhoi: Lack of times");
+        safeMultiplyMint(msg.sender, num);
+        decreaseWhiteListTimesOf(msg.sender, num);
     }
 
     // TODO:test all require
     function safeMultiplyMint(address to,uint256 num) private{
-        require(num != 0, "Saanhoi: Can't mint zero NFT");
+        require(num > 0, "Saanhoi: Can't mint zero NFT");
 
         for(uint256 i = 0;i < num;i++){
             _tokenIdCounter.increment();
@@ -69,14 +79,22 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable{
     */
 
     function isWhiteListMember(address sender) private view returns(bool){
-        return WHITELIST[sender];
+        return WHITELIST[sender] > 0;
     }
 
     function addWhiteListMember(address[] members) public onlyOwner{
         for(uint256 i=0;i < members.length; i++){
             // only member is not in WHITELIST, add to WHITELIST;
-            if( !isWhiteListMember(members[i]) ) WHITELIST[members] = true;
+            if( !isWhiteListMember(members[i]) ) WHITELIST[members] = 1 + _WHITELIST_MAX_MINT_TIMES;
         }
+    }
+
+    function decreaseWhiteListTimesOf(address member,uint num) private{
+        WHITELIST[member] = WHITELIST[member] - num;
+    }
+
+    function restWhiteListTimesOf(address member) private view returns (uint){
+        return WHITELIST[member] - 1;
     }
 
     /** Manage STAGE
