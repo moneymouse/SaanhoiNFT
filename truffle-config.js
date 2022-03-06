@@ -18,10 +18,11 @@
  *
  */
 
-// const HDWalletProvider = require('@truffle/hdwallet-provider');
-//
-// const fs = require('fs');
-// const mnemonic = fs.readFileSync(".secret").toString().trim();
+const HDWalletProvider = require('@truffle/hdwallet-provider');
+
+const fs = require('fs');
+const mnemonic = fs.readFileSync(".secret").toString().trim();
+const providerURL = fs.readFileSync(".ropstenInfura").toString().trim();
 
 module.exports = {
   /**
@@ -45,6 +46,13 @@ module.exports = {
      host: "127.0.0.1",     // Localhost (default: none)
      port: 7545,            // Standard Ethereum port (default: none)
      network_id: "*",       // Any network (default: none)
+     websockets:true
+    },
+    remote: {
+      host: "80.209.229.233",     // Localhost (default: none)
+      port: 8848,            // Standard Ethereum port (default: none)
+      network_id: "*",       // Any network (default: none)
+      networkCheckTimeout: 100000000
     },
     // Another network with more advanced options...
     // advanced: {
@@ -57,14 +65,32 @@ module.exports = {
     // },
     // Useful for deploying to a public network.
     // NB: It's important to wrap the provider as a function.
-    // ropsten: {
-    // provider: () => new HDWalletProvider(mnemonic, `https://ropsten.infura.io/v3/YOUR-PROJECT-ID`),
-    // network_id: 3,       // Ropsten's id
-    // gas: 5500000,        // Ropsten has a lower block limit than mainnet
-    // confirmations: 2,    // # of confs to wait between deployments. (default: 0)
-    // timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
-    // skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
-    // },
+    mainnet: {
+    provider: () => new HDWalletProvider({
+      providerOrUrl: providerURL,
+      privateKeys: [mnemonic],
+      numberOfAddresses:1
+    }),
+    network_id: 3,       // Ropsten's id
+    gas: 5500000,        // Ropsten has a lower block limit than mainnet
+    confirmations: 2,    // # of confirmations to wait between deployments. (default: 0)
+    timeoutBlocks: 2000,  // # of blocks before a deployment times out  (minimum/default: 50)
+    networkCheckTimeout: 1000000000,
+    skipDryRun: true
+    },
+    ropsten: {
+      provider: () => new HDWalletProvider({
+        providerOrUrl: `${fs.readFileSync(".mainnetInfura").toString().trim()}`,
+        privateKeys: [mnemonic],
+        numberOfAddresses:1
+      }),
+      network_id: 3,       // Ropsten's id
+      gas: 5500000,        // Ropsten has a lower block limit than mainnet
+      confirmations: 2,    // # of confirmations to wait between deployments. (default: 0)
+      timeoutBlocks: 2000,  // # of blocks before a deployment times out  (minimum/default: 50)
+      networkCheckTimeout: 1000000000,
+      skipDryRun: true
+    },
     // Useful for private networks
     // private: {
     // provider: () => new HDWalletProvider(mnemonic, `https://network.io`),
@@ -76,6 +102,11 @@ module.exports = {
   // Set default mocha options here, use special reporters etc.
   mocha: {
     // timeout: 100000
+  },
+
+  plugins: ['truffle-plugin-verify'],
+  api_keys: {
+    etherscan: `${fs.readFileSync(".EtherscanAPI")}`
   },
 
   // Configure your compilers

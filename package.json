@@ -7,7 +7,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "truffle test --network development"
+    "test": "truffle test --network development",
+    "deploy to 8848": "truffle migrate --network remote",
+    "verify on ropsten": "truffle run verify Saanhoi --network ropsten"
   },
   "keywords": [
     "solidity",
@@ -17,6 +19,11 @@
   "author": "MoneyMouse",
   "license": "MIT",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.5.0"
+    "@openzeppelin/contracts": "^4.5.0",
+    "@truffle/hdwallet-provider": "^2.0.3",
+    "chai": "^4.3.6"
+  },
+  "devDependencies": {
+    "truffle-plugin-verify": "^0.5.21"
   }
 }

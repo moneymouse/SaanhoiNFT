@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable{
+contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable,ReentrancyGuard{
 
     enum STATUS {PENDING,WHITELIST,PUBLIC_SALE}
     STATUS public STAGE;
@@ -23,12 +23,12 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable{
     uint immutable private _WHITELIST_MAX_MINT_TIMES;
     uint immutable private _MINT_BATCH;
 
-
+    using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
 
     /** verify the STAGE */
     modifier onlyStage(STATUS stage_){
-        require(stage_ == STAGE, "Saanhoi: It's not "+stage_+" stage.");
+        require(stage_ == STAGE, "Saanhoi: It's not right stage.");
         _;
     }
 
@@ -46,14 +46,12 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable{
         return _maxTotalSupply;
     }
 
-    // TODO: test payable, onlyStage
     function mint(uint256 num) public onlyStage(STATUS.PUBLIC_SALE) nonReentrant payable{
-        require(num <= _MINT_BATCH,"Saanhoi");
+        require(num <= _MINT_BATCH,"Saanhoi: over batch");
         require(msg.value == num*PRICE, "Saanhoi: Lack of ETH");
         safeMultiplyMint(msg.sender,num);
     }
 
-    // TODO: whiteListMint(nonReentrant)
     function whiteListMint(uint256 num) public onlyStage(STATUS.WHITELIST) nonReentrant payable{
         require(msg.value == num*PRICE, "Saanhoi: Lack of ETH");
         require(isWhiteListMember(msg.sender), "Saanhoi: Illegal members");
@@ -68,24 +66,24 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable{
 
         for(uint256 i = 0;i < num;i++){
             _tokenIdCounter.increment();
-            require(_tokenIdCounter<=maxTotalSupply, "Saanhoi: All NFTs have already been minted.");
-            _safeMint(to,_tokenIdCounter.current());
+            uint256 current_ = _tokenIdCounter.current();
+            require(current_ <= maxTotalSupply(), "Saanhoi: All NFTs have already been minted.");
+            _safeMint(to,current_);
         }
     }
 
     /**
     *   White list manage
-    *   TODO: test all
     */
 
     function isWhiteListMember(address sender) private view returns(bool){
         return WHITELIST[sender] > 0;
     }
 
-    function addWhiteListMember(address[] members) public onlyOwner{
+    function addWhiteListMember(address[] calldata members) public onlyOwner{
         for(uint256 i=0;i < members.length; i++){
             // only member is not in WHITELIST, add to WHITELIST;
-            if( !isWhiteListMember(members[i]) ) WHITELIST[members] = 1 + _WHITELIST_MAX_MINT_TIMES;
+            if( !isWhiteListMember(members[i]) ) WHITELIST[members[i]] = 1 + _WHITELIST_MAX_MINT_TIMES;
         }
     }
 
@@ -98,16 +96,23 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable{
     }
 
     /** Manage STAGE
-    *   TODO: test
     */
 
-    function setStage(STATUS stage_) public onlyOwner{
+    function setStage(STATUS stage_) private{
+        require(STAGE != stage_,"Saanhoi: Have been stage_");
         STAGE = stage_;
+    }
+
+    function toWHITELISTStage() public onlyOwner{
+        setStage(STATUS.WHITELIST);
+    }
+
+    function toPUBLICStage() public onlyOwner{
+        setStage(STATUS.PUBLIC_SALE);
     }
 
     /**
      *  manage URI
-     *  TODO: Testing each one
      */
     
     function setURI(string memory baseURI_) public onlyOwner{
@@ -122,14 +127,19 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable{
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) override (ERC721,ERC721Enumerable) internal whenNotPaused{
         return super._beforeTokenTransfer(from,to,tokenId);
-    }  
-    
+    }
+
     function pause() public onlyOwner{
         _pause();
     }
 
     function unpause() public onlyOwner{
         _unpause();
+    }
+
+    function release() public onlyOwner{
+        uint256 balance_ = address(this).balance;
+        payable(address(owner())).transfer(balance_);
     }
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC721 , ERC721Enumerable) returns(bool){
