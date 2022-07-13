@@ -23,6 +23,8 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable,ReentrancyGuard{
     uint immutable private _WHITELIST_MAX_MINT_TIMES;
     uint immutable private _MINT_BATCH;
 
+    uint public teamQuota;
+
     using Counters for Counters.Counter;
     Counters.Counter private _tokenIdCounter;
 
@@ -32,7 +34,7 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable,ReentrancyGuard{
         _;
     }
 
-    constructor(string memory baseURI_) ERC721("Saanhoi","SA"){
+    constructor(string memory baseURI_,uint teamQuota_) ERC721("Saanhoi","SA"){
         PRICE = 0.08 ether;
         _maxTotalSupply = 10000;
         _uri = baseURI_;
@@ -40,6 +42,8 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable,ReentrancyGuard{
 
         _WHITELIST_MAX_MINT_TIMES = 2;
         _MINT_BATCH = 5;
+
+        teamQuota = teamQuota_;
     }
 
     function maxTotalSupply() public view returns(uint256){
@@ -60,7 +64,12 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable,ReentrancyGuard{
         decreaseWhiteListTimesOf(msg.sender, num);
     }
 
-    // TODO:test all require
+    function teamMint(uint num) public onlyOwner nonReentrant{
+        require(teamQuota >= num,"Saanhoi: lack of quota");
+        teamQuota = teamQuota - num;
+        safeMultiplyMint(msg.sender, num);
+    }
+
     function safeMultiplyMint(address to,uint256 num) private{
         require(num > 0, "Saanhoi: Can't mint zero NFT");
 
@@ -82,12 +91,13 @@ contract Saanhoi is ERC721,ERC721Enumerable,Pausable,Ownable,ReentrancyGuard{
 
     function addWhiteListMember(address[] calldata members) public onlyOwner{
         for(uint256 i=0;i < members.length; i++){
-            // only member is not in WHITELIST, add to WHITELIST;
+            // only add member not WHITELIST
             if( !isWhiteListMember(members[i]) ) WHITELIST[members[i]] = 1 + _WHITELIST_MAX_MINT_TIMES;
         }
     }
 
     function decreaseWhiteListTimesOf(address member,uint num) private{
+        require(WHITELIST[member] >= num,"EVM: uint can not be negative");
         WHITELIST[member] = WHITELIST[member] - num;
     }
 

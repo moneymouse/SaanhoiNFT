@@ -1,0 +1,9 @@
+{
+    "name":"SCPV #1",
+    "description":"Saanhoi Club Promotion Voucher (SCPV #1) is a voucher within Saanhoi Club. Using this voucher, one can get 200 scores linked with their address. Scores are used to calculate one's importance to a DAO. You can get whitelist or more benefits through score. Twitter: [twitter.com/saanhoiClub](https://twitter.com/SaanhoiClub)",
+    "image":"https://saanhoi.club/api/image/SCPV_1.png",
+    "properties":{
+        "SCORE":"200",
+        "EDITION":"#1"
+    }
+}

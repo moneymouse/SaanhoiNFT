@@ -8,8 +8,7 @@
   },
   "scripts": {
     "test": "truffle test --network development",
-    "deploy to 8848": "truffle migrate --network remote",
-    "verify on ropsten": "truffle run verify Saanhoi --network ropsten"
+    "verify": "truffle run verify %npm_config_contract% --network %npm_config_network%"
   },
   "keywords": [
     "solidity",
@@ -21,7 +20,9 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.5.0",
     "@truffle/hdwallet-provider": "^2.0.3",
-    "chai": "^4.3.6"
+    "chai": "^4.3.6",
+    "truffle": "^5.5.4",
+    "web3": "^1.7.1"
   },
   "devDependencies": {
     "truffle-plugin-verify": "^0.5.21"

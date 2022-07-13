@@ -22,7 +22,6 @@ const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 const fs = require('fs');
 const mnemonic = fs.readFileSync(".secret").toString().trim();
-const providerURL = fs.readFileSync(".ropstenInfura").toString().trim();
 
 module.exports = {
   /**
@@ -43,10 +42,10 @@ module.exports = {
     // options below to some value.
     //
     development: {
-     host: "127.0.0.1",     // Localhost (default: none)
-     port: 7545,            // Standard Ethereum port (default: none)
-     network_id: "*",       // Any network (default: none)
-     websockets:true
+      host: "127.0.0.1",     // Localhost (default: none)
+      port: 7545,            // Standard Ethereum port (default: none)
+      network_id: "*",       // Any network (default: none)
+      websockets:true
     },
     remote: {
       host: "80.209.229.233",     // Localhost (default: none)
@@ -66,21 +65,21 @@ module.exports = {
     // Useful for deploying to a public network.
     // NB: It's important to wrap the provider as a function.
     mainnet: {
-    provider: () => new HDWalletProvider({
-      providerOrUrl: providerURL,
-      privateKeys: [mnemonic],
-      numberOfAddresses:1
-    }),
-    network_id: 3,       // Ropsten's id
-    gas: 5500000,        // Ropsten has a lower block limit than mainnet
-    confirmations: 2,    // # of confirmations to wait between deployments. (default: 0)
-    timeoutBlocks: 2000,  // # of blocks before a deployment times out  (minimum/default: 50)
-    networkCheckTimeout: 1000000000,
-    skipDryRun: true
+      provider: () => new HDWalletProvider({
+        providerOrUrl: `${fs.readFileSync(".mainnetInfura").toString().trim()}`,
+        privateKeys: [mnemonic],
+        numberOfAddresses:1
+      }),
+      network_id: 1,       // Mainnet's id
+      gas: 8000000,        // Ropsten has a lower block limit than mainnet
+      confirmations: 2,    // # of confirmations to wait between deployments. (default: 0)
+      timeoutBlocks: 2000,  // # of blocks before a deployment times out  (minimum/default: 50)
+      networkCheckTimeout: 1000000000,
+      skipDryRun: false
     },
     ropsten: {
       provider: () => new HDWalletProvider({
-        providerOrUrl: `${fs.readFileSync(".mainnetInfura").toString().trim()}`,
+        providerOrUrl: `https://ropsten.infura.io/v3/ec17128bf9514b64998da66dfb6842de`,
         privateKeys: [mnemonic],
         numberOfAddresses:1
       }),
@@ -91,6 +90,34 @@ module.exports = {
       networkCheckTimeout: 1000000000,
       skipDryRun: true
     },
+    mumbai: {
+      provider: () => new HDWalletProvider({
+        providerOrUrl: `https://polygon-mumbai.infura.io/v3/ec17128bf9514b64998da66dfb6842de`,
+        privateKeys: [mnemonic],
+        numberOfAddresses:1
+      }),
+      network_id: 80001,       // Ropsten's id
+      gas: 5500000,        // Ropsten has a lower block limit than mainnet
+      confirmations: 2,    // # of confirmations to wait between deployments. (default: 0)
+      timeoutBlocks: 2000,  // # of blocks before a deployment times out  (minimum/default: 50)
+      networkCheckTimeout: 1000000000,
+      skipDryRun: true
+    },
+    polygon:{
+      provider: () => new HDWalletProvider({
+        providerOrUrl: `https://polygon-mainnet.infura.io/v3/ec17128bf9514b64998da66dfb6842de`,
+        privateKeys: [mnemonic],
+        numberOfAddresses:1
+      }),
+      network_id: 137,       // polygon's id
+      gas: 8000000,
+      gasLimit: 8000000,
+      confirmations: 2,    // # of confirmations to wait between deployments. (default: 0)
+      timeoutBlocks: 2000,  // # of blocks before a deployment times out  (minimum/default: 50)
+      networkCheckTimeout: 1000000000,
+      skipDryRun: false,
+      gasPrice: 37000000000,
+    }
     // Useful for private networks
     // private: {
     // provider: () => new HDWalletProvider(mnemonic, `https://network.io`),
@@ -106,7 +133,8 @@ module.exports = {
 
   plugins: ['truffle-plugin-verify'],
   api_keys: {
-    etherscan: `${fs.readFileSync(".EtherscanAPI")}`
+    etherscan: `${fs.readFileSync(".EtherscanAPI")}`,
+    polygonscan: `${fs.readFileSync(".PolyScanAPI")}`
   },
 
   // Configure your compilers
